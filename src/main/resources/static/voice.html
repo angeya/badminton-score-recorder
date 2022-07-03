@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="user-scalable=0">
+	<title>羽毛球计分器</title>
+	<style type="text/css" rel="stylesheet">
+		*{
+			user-select: none;
+			-moz-user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+		}
+		html, body{
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			height: 100%;
+		}
+		.container{
+			display: flex;
+			flex-direction: row;
+			height: 100%;
+			width: 100%;
+		}
+		.team-score{
+			display: flex;
+			flex-direction: row;
+			height: 100%;
+			width: 50%;
+			font-weight: bolder;
+			font-size: 350px;
+			text-align: center;
+			justify-content: center;
+			align-items: center;
+			cursor: pointer;
+			transition: background-color 2s
+		}
+		.left-team{
+			background: #70f3ff;
+		}
+		.right-team{
+			background: #3eede7;
+		}
+		#left-team-score{
+			margin-bottom: 180px;
+			transition: color 2s
+		}
+		#right-team-score{
+			margin-bottom: 180px;
+			transition: color 2s
+		}
+		.operation-container{
+			position: absolute;
+			display: flex;
+			flex-direction: row;
+			bottom: 0;
+			width: 100%;
+		}
+		.btn{
+			background: rgba(255, 255, 255, 0.4);
+			text-align: center;
+			width: 25%;
+			border: #504f4f dashed 1px;
+			cursor: pointer;
+		}
+
+		@media screen and (min-height: 650px){
+			.btn {
+				font-size: 50px;
+				height: 200px;
+				line-height: 200px;
+			}
+		}
+		@media screen and (max-height: 649px){
+			.btn {
+				font-size: 36px;
+				height: 100px;
+				line-height: 100px;
+			}
+			#left-team-score{
+				margin-bottom: 135px;
+			}
+			#right-team-score{
+				margin-bottom: 135px;
+			}
+		}
+	</style>
+</head>
+<body>
+<div class="container">
+	<div id="left-team" class="left-team team-score">
+		<div id="left-team-score"></div>
+	</div>
+	<div id="right-team" class="right-team team-score">
+		<div id="right-team-score"></div>
+	</div>
+	<div class="operation-container">
+		<div id="left-team-decrease" class="decrease-btn btn">-1</div>
+		<div id="switch-side" class="switch-side operation-btn btn">换边</div>
+		<div id="reset-score" class="reset-score operation-btn btn">重置比分</div>
+		<div id="right-team-decrease" class="decrease-btn btn">-1</div>
+	</div>
+</div>
+</body>
+<script type="application/javascript">
+	const leftTeam = document.getElementById('left-team')
+	const rightTeam = document.getElementById('right-team')
+	const leftTeamScore = document.getElementById('left-team-score')
+	const rightTeamScore = document.getElementById('right-team-score')
+
+	const leftTeamDecrease = document.getElementById('left-team-decrease')
+	const rightTeamDecrease = document.getElementById('right-team-decrease')
+	const switchSide = document.getElementById('switch-side')
+	const resetScore = document.getElementById('reset-score')
+	const LOCAL_STORAGE_KEY = 'badminton-score'
+
+	const THEMES = [
+		{
+			scoreColor: '#eeeeee',
+			leftBgColor: '#161823',
+			rightBgColor: '#000000'
+		},
+		{
+			scoreColor: '#10de2a',
+			leftBgColor: '#3d3b4f',
+			rightBgColor: '#392f41'
+		},
+		{
+			scoreColor: '#161823',
+			leftBgColor: '#70f3ff',
+			rightBgColor: '#3eede7'
+		}
+	]
+
+	const MIN_SCORE = 0 // 最小分数
+	const MAX_SCORE = 30 // 最大分数
+
+	const LONG_TOUCH_TIME_THRESHOLD = 1500 // 长按时间阈值
+
+	let leftChange = true // 是否左边比分改变，false为右边改变，用于报分顺序
+
+	/**
+	 * 数据
+	 */
+	let scoreData = {
+		left: 0,
+		right: 0,
+		theme: 0
+	}
+
+	let touchStartTime = null
+
+	/**
+	 * 初始化分数
+	 */
+	window.onload = () => {
+		const scoreData = getScoreData()
+		setColor(scoreData)
+		showScore(scoreData)
+	}
+
+	/**
+	 * 设置分数颜色和背景色
+	 * @param data 分数和颜色数据
+	 */
+	function setColor(data) {
+		leftTeamScore.style.color = THEMES[data.theme].scoreColor
+		rightTeamScore.style.color = THEMES[data.theme].scoreColor
+		leftTeam.style.backgroundColor = THEMES[data.theme].leftBgColor
+		rightTeam.style.backgroundColor = THEMES[data.theme].rightBgColor
+	}
+
+	/**
+	 * 获取比分和颜色等数据
+	 * @returns 优先使用本地缓存的数据
+	 */
+	function getScoreData() {
+		const localData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY))
+		if (localData) {
+			if (localData.left || localData.right || localData.theme) { // 升级兼容
+				scoreData = localData
+			}
+		}
+		return scoreData
+	}
+
+	/**
+	 * 保存颜色和分数
+	 * @param data 数据
+	 */
+	function saveScoreData(data) {
+		showScore(scoreData)
+		localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data))
+	}
+
+	/**
+	 * 在 DOM 树中加载分数
+	 * @param data
+	 */
+	function showScore(data) {
+		const left = data.left
+		const right = data.right
+		leftTeamScore.innerText = left
+		rightTeamScore.innerText = right
+		const text = leftChange? `${left}比${right}`: `${right}比${left}`
+		speakText(text)
+	}
+
+	leftTeam.ontouchstart = recordTouchStartTime
+	rightTeam.ontouchstart = recordTouchStartTime
+
+	/**
+	 * 记录触摸开始的时间
+	 */
+	function recordTouchStartTime () {
+		touchStartTime = Date.now()
+	}
+
+	/**
+	 * 滑动结束：下滑设置背景颜色，右滑设置字体颜色
+	 */
+	leftTeam.ontouchend = changeTheme
+	/**
+	 * 滑动结束：下滑设置背景颜色，右滑设置字体颜色
+	 */
+	rightTeam.ontouchend = changeTheme
+
+	/**
+	 * 获取数组的下一个元素下标
+	 * @param array 数组
+	 * @param currentIndex 当前下标
+	 */
+	function getNextIndex(array, currentIndex) {
+		if (currentIndex >= array.length - 1) {
+			return 0
+		}
+		return ++currentIndex
+	}
+
+	/**
+	 * 长按切换主题
+	 */
+	function changeTheme() {
+		const touchEndTime = Date.now()
+		if (touchEndTime - touchStartTime > LONG_TOUCH_TIME_THRESHOLD) {
+			console.log('long')
+			scoreData.theme = getNextIndex(THEMES, scoreData.theme)
+			setColor(scoreData)
+			saveScoreData(scoreData)
+		}
+	}
+
+	/**
+	 * 左边加
+	 */
+	function handleLeftTeamIncrease (){
+		if (scoreData.left === MAX_SCORE) return
+		scoreData.left++
+		leftChange = true
+		saveScoreData(scoreData)
+	}
+	leftTeam.onclick = handleLeftTeamIncrease
+	/**
+	 * 左边减
+	 */
+	leftTeamDecrease.onclick = () => {
+		if (scoreData.left === MIN_SCORE) return
+		scoreData.left--
+		saveScoreData(scoreData)
+	}
+	/**
+	 * 右边加
+	 */
+	function handleRightTeamIncrease () {
+		if (scoreData.right === MAX_SCORE) return
+		scoreData.right++
+		leftChange = false
+		saveScoreData(scoreData)
+	}
+	rightTeam.onclick = handleRightTeamIncrease
+	/**
+	 * 右边减
+	 */
+	rightTeamDecrease.onclick = () => {
+		if (scoreData.right === MIN_SCORE) return
+		scoreData.right--
+		saveScoreData(scoreData)
+	}
+	/**
+	 * 重置分数为 0 - 0
+	 */
+	resetScore.onclick = () => {
+		scoreData.left = 0
+		scoreData.right = 0
+		saveScoreData(scoreData)
+	}
+	/**
+	 * 交换比分
+	 */
+	switchSide.onclick = () => {
+		const temp = scoreData.left
+		scoreData.left = scoreData.right
+		scoreData.right = temp
+		saveScoreData(scoreData)
+	}
+	/**
+	 * 阅读文本
+	 * @Param text 文本内容
+	 */
+	function speakText(text) {
+		const speaker = new window.SpeechSynthesisUtterance();
+		window.speechSynthesis.cancel()
+		speaker.volume = 1
+		speaker.text = text
+		window.speechSynthesis.speak(speaker)
+	}
+</script>
+</html>
