@@ -203,7 +203,12 @@
 		const right = data.right
 		leftTeamScore.innerText = left
 		rightTeamScore.innerText = right
-		const text = leftChange? `${left}比${right}`: `${right}比${left}`
+		let text = ''
+		if (left === right) {
+			text = `${left}平`
+		} else {
+			text = leftChange? `${left}比${right}`: `${right}比${left}`
+		}
 		speakText(text)
 	}
 
