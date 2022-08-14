@@ -67,7 +67,7 @@
 
 		@media screen and (min-height: 650px){
 			.btn {
-				font-size: 50px;
+				font-size: 40px;
 				height: 200px;
 				line-height: 200px;
 			}
@@ -204,8 +204,9 @@
 		leftTeamScore.innerText = left
 		rightTeamScore.innerText = right
 		let text = ''
-		if (left === right) {
-			text = `${left}平`
+		// 非0的比分相同时，念平
+		if (left === right && left !== 0) {
+			text = `${left} 平` // 中间空格防止2平念两平
 		} else {
 			text = leftChange? `${left}比${right}`: `${right}比${left}`
 		}
