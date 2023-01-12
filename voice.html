@@ -203,18 +203,13 @@
 		const right = data.right
 		leftTeamScore.innerText = left
 		rightTeamScore.innerText = right
-		let text = ''
-		// 非0的比分相同时，念平
-		if (left === right && left !== 0) {
-			text = `${left} 平` // 中间空格防止2平念两平
-		} else {
-			text = leftChange? `${left}比${right}`: `${right}比${left}`
-		}
-		speakText(text)
+		speakScore(left, right)
 	}
 
-	leftTeam.ontouchstart = recordTouchStartTime
-	rightTeam.ontouchstart = recordTouchStartTime
+	function speakScore(left, right) {
+		let text = getScoreText(left, right)
+		speakText(text)
+	}
 
 	/**
 	 * 记录触摸开始的时间
@@ -223,13 +218,14 @@
 		touchStartTime = Date.now()
 	}
 
+	// 触摸屏幕记录开始时间
+	leftTeam.ontouchstart = recordTouchStartTime
+	rightTeam.ontouchstart = recordTouchStartTime
+
 	/**
-	 * 滑动结束：下滑设置背景颜色，右滑设置字体颜色
+	 * 长按切换主体
 	 */
 	leftTeam.ontouchend = changeTheme
-	/**
-	 * 滑动结束：下滑设置背景颜色，右滑设置字体颜色
-	 */
 	rightTeam.ontouchend = changeTheme
 
 	/**
@@ -310,6 +306,66 @@
 		scoreData.right = temp
 		saveScoreData(scoreData)
 	}
+
+	/**
+	 * 获取朗读的内容
+	 */
+	function getScoreText(left, right) {
+		let text = ''
+		// 非0的比分相同时，念平
+		if (left === right && left !== 0) {
+			if (left === 2) {
+				text = `${left},平` // 2平中间逗号防止念两平
+			} else {
+				text = `${left}平`
+			}
+		} else {
+			text = leftChange? `${left}比${right}`: `${right}比${left}`
+		}
+		const suffix = getScoreSuffix(left, right)
+		text = `${text}，${suffix}`
+		return text
+	}
+
+	/**
+	 * 获取比分后缀 （赛点，胜利，小概率加油）
+	 */
+	function getScoreSuffix(left, right) {
+		const higher = left > right ? left: right
+		const lower = left <= right ? left: right
+		const beta = higher - lower
+		if (higher === MAX_SCORE) {
+			return '比赛结束！'
+		}
+		if (beta >= 2) {
+			if (higher >= 21) {
+				return '比赛结束！'
+			} else if (higher === 20) {
+				return '赛点'
+			}
+		}
+		if (beta === 1 && higher >= 20) {
+			return `赛点，${getSurprise('难分伯仲，加油加油！', 0.15)}`
+		}
+		if (higher === 0) {
+			return '友谊第一，比赛第二！'
+		}
+		return getSurprise('加油', 0.15)
+	}
+
+	/**
+	 * 一定概率会返回给定的字符串
+	 */
+	function getSurprise(text, threshold) {
+		let result = ''
+		const randomComeOn = Math.random()
+		if (randomComeOn < threshold) {
+			result = text
+		}
+		return result
+	}
+
+
 	/**
 	 * 阅读文本
 	 * @Param text 文本内容
