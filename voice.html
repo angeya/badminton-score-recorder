@@ -315,7 +315,7 @@
 		// 非0的比分相同时，念平
 		if (left === right && left !== 0) {
 			if (left === 2) {
-				text = `${left},平` // 2平中间逗号防止念两平
+				text = '二平' // 2平中间逗号防止念两平
 			} else {
 				text = `${left}平`
 			}
@@ -345,12 +345,12 @@
 			}
 		}
 		if (beta === 1 && higher >= 20) {
-			return `赛点，${getSurprise('难分伯仲，加油加油！', 0.15)}`
+			return `赛点，${getSurprise('难分伯仲，加油加油！', 0.08)}`
 		}
 		if (higher === 0) {
 			return '友谊第一，比赛第二！'
 		}
-		return getSurprise('加油', 0.15)
+		return getSurprise('加油', 0.05)
 	}
 
 	/**
