@@ -206,6 +206,9 @@
 		speakScore(left, right)
 	}
 
+	/**
+	 * 语音播报
+	 */
 	function speakScore(left, right) {
 		let text = getScoreText(left, right)
 		speakText(text)
@@ -345,12 +348,15 @@
 			}
 		}
 		if (beta === 1 && higher >= 20) {
-			return `赛点，${getSurprise('难分伯仲，加油加油！', 0.08)}`
+			return `赛点，${getSurprise('难分伯仲，加油加油！', 0.03)}`
 		}
 		if (higher === 0) {
-			return '友谊第一，比赛第二！'
+			return getSurprise('友谊第一，比赛第二！', 0.05)
 		}
-		return getSurprise('加油', 0.05)
+		// 比分大于10才会说加油
+		if (lower >= 10) {
+			return getSurprise('加油', 0.02)
+		}
 	}
 
 	/**
@@ -364,7 +370,6 @@
 		}
 		return result
 	}
-
 
 	/**
 	 * 阅读文本
