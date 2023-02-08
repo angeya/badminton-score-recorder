@@ -4,6 +4,13 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="user-scalable=0">
 	<title>羽毛球计分器</title>
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="#fff">
+	<meta name="apple-mobile-web-app-title" content="羽毛球计分器">
+	<link rel="apple-touch-icon" sizes="180x180" href="./logo.png">
+	<meta name="msapplication-TileColor" content="#fff">
+	<meta name="theme-color" content="#fff" />
+<!--	<link rel="manifest" href="./manifest.json"/>-->
 	<style type="text/css" rel="stylesheet">
 		*{
 			user-select: none;
@@ -357,6 +364,7 @@
 		if (lower >= 10) {
 			return getSurprise('加油', 0.02)
 		}
+		return ''
 	}
 
 	/**
