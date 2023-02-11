@@ -9,7 +9,7 @@
 	<meta name="apple-mobile-web-app-title" content="羽毛球计分器">
 	<link rel="apple-touch-icon" sizes="180x180" href="./logo.png">
 	<meta name="msapplication-TileColor" content="#fff">
-	<meta name="theme-color" content="#fff" />
+	<meta id="top-theme" name="theme-color" content="#fff" />
 <!--	<link rel="manifest" href="./manifest.json"/>-->
 	<style type="text/css" rel="stylesheet">
 		*{
@@ -105,7 +105,7 @@
 	<div class="operation-container">
 		<div id="left-team-decrease" class="decrease-btn btn">-1</div>
 		<div id="switch-side" class="switch-side operation-btn btn">换边</div>
-		<div id="reset-score" class="reset-score operation-btn btn">重置比分</div>
+		<div id="reset-score" class="reset-score operation-btn btn">重置</div>
 		<div id="right-team-decrease" class="decrease-btn btn">-1</div>
 	</div>
 </div>
@@ -121,6 +121,8 @@
 	const switchSide = document.getElementById('switch-side')
 	const resetScore = document.getElementById('reset-score')
 	const LOCAL_STORAGE_KEY = 'badminton-score'
+
+	const topTheme = document.getElementById('top-theme')
 
 	const THEMES = [
 		{
@@ -143,9 +145,12 @@
 	const MIN_SCORE = 0 // 最小分数
 	const MAX_SCORE = 30 // 最大分数
 
-	const LONG_TOUCH_TIME_THRESHOLD = 1500 // 长按时间阈值
+	const LONG_TOUCH_TIME_THRESHOLD = 1200 // 长按时间阈值
 
 	let leftChange = true // 是否左边比分改变，false为右边改变，用于报分顺序
+
+	let hasUserChangedThemeAfterSystem = false // 系统设置主题后用户是否更改过
+	let lastSystemThemeStatus = null // 上一次设置颜色的时候系统主题状态
 
 	/**
 	 * 数据
@@ -163,24 +168,48 @@
 	 */
 	window.onload = () => {
 		const scoreData = getScoreData()
-		setColor(scoreData)
+		setColor()
 		showScore(scoreData)
+		// 每隔三秒检测一次系统颜色
+		setInterval(() => {
+			setColor()
+		}, 3000)
 	}
 
 	/**
 	 * 设置分数颜色和背景色
-	 * @param data 分数和颜色数据
+	 * @param index 有下标则代表用户设置调用，否则为系统调用
 	 */
-	function setColor(data) {
-		leftTeamScore.style.color = THEMES[data.theme].scoreColor
-		rightTeamScore.style.color = THEMES[data.theme].scoreColor
-		leftTeam.style.backgroundColor = THEMES[data.theme].leftBgColor
-		rightTeam.style.backgroundColor = THEMES[data.theme].rightBgColor
+	function setColor(index = null) {
+		//
+		if (index) {
+			hasUserChangedThemeAfterSystem = true
+		} else {
+			const isLight = window.matchMedia('(prefers-color-scheme: light)').matches
+			lastSystemThemeStatus = isLight
+			if (isLight) {
+				index = 2
+				topTheme.content = '#fff'
+			} else {
+				index = 0
+				topTheme.content = '#000'
+			}
+			// 如果用户修改过了，而且系统主题和上次一样， 则不更改界面颜色
+			if (hasUserChangedThemeAfterSystem && isLight === lastSystemThemeStatus) {
+				return
+			}
+			lastSystemThemeStatus = isLight
+			hasUserChangedThemeAfterSystem = false
+		}
+		leftTeamScore.style.color = THEMES[index].scoreColor
+		rightTeamScore.style.color = THEMES[index].scoreColor
+		leftTeam.style.backgroundColor = THEMES[index].leftBgColor
+		rightTeam.style.backgroundColor = THEMES[index].rightBgColor
 	}
 
 	/**
 	 * 获取比分和颜色等数据
-	 * @returns 优先使用本地缓存的数据
+	 * @returns {left: number, right: number, theme: number}
 	 */
 	function getScoreData() {
 		const localData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY))
@@ -256,9 +285,8 @@
 	function changeTheme() {
 		const touchEndTime = Date.now()
 		if (touchEndTime - touchStartTime > LONG_TOUCH_TIME_THRESHOLD) {
-			console.log('long')
 			scoreData.theme = getNextIndex(THEMES, scoreData.theme)
-			setColor(scoreData)
+			setColor(scoreData.theme)
 			saveScoreData(scoreData)
 		}
 	}
