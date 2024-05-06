@@ -43,6 +43,7 @@
 			cursor: pointer;
 			transition: background-color 2s
 		}
+
 		.left-team{
 			background: #70f3ff;
 		}
@@ -57,6 +58,21 @@
 			margin-bottom: 180px;
 			transition: color 2s
 		}
+
+		/*发球图标*/
+		.serve-icon {
+			position: absolute;
+			width: 80px;
+			height: 80px;
+			display: none;
+		}
+		#left-serve-icon {
+			top: 58%; left: calc(25% - 40px);
+		}
+		#right-serve-icon {
+			top: 58%; left: calc(75% - 40px);
+		}
+
 		.operation-container{
 			position: absolute;
 			display: flex;
@@ -96,12 +112,18 @@
 </head>
 <body>
 <div class="container">
+	<!-- 左边队伍 -->
 	<div id="left-team" class="left-team team-score">
 		<div id="left-team-score"></div>
+		<img src="badminton.png" alt="" id="left-serve-icon" class="serve-icon"/>
 	</div>
+	<!-- 右边队伍 -->
 	<div id="right-team" class="right-team team-score">
 		<div id="right-team-score"></div>
+		<img src="badminton.png" alt="" id="right-serve-icon" class="serve-icon"/>
 	</div>
+
+	<!-- 操作栏 -->
 	<div class="operation-container">
 		<div id="left-team-decrease" class="decrease-btn btn">-1</div>
 		<div id="switch-side" class="switch-side operation-btn btn">换边</div>
@@ -121,6 +143,10 @@
 	const switchSide = document.getElementById('switch-side')
 	const resetScore = document.getElementById('reset-score')
 	const LOCAL_STORAGE_KEY = 'badminton-score'
+
+	// 发球图标
+	const LEFT_SERVE_ICON = document.getElementById('left-serve-icon')
+	const RIGHT_SERVE_ICON = document.getElementById('right-serve-icon')
 
 	const topTheme = document.getElementById('top-theme')
 
@@ -298,6 +324,7 @@
 		if (scoreData.left === MAX_SCORE) return
 		scoreData.left++
 		leftChange = true
+		leftServe()
 		saveScoreData(scoreData)
 	}
 	leftTeam.onclick = handleLeftTeamIncrease
@@ -307,6 +334,7 @@
 	leftTeamDecrease.onclick = () => {
 		if (scoreData.left === MIN_SCORE) return
 		scoreData.left--
+		hideServeIcon()
 		saveScoreData(scoreData)
 	}
 	/**
@@ -316,6 +344,7 @@
 		if (scoreData.right === MAX_SCORE) return
 		scoreData.right++
 		leftChange = false
+		rightServe()
 		saveScoreData(scoreData)
 	}
 	rightTeam.onclick = handleRightTeamIncrease
@@ -325,6 +354,7 @@
 	rightTeamDecrease.onclick = () => {
 		if (scoreData.right === MIN_SCORE) return
 		scoreData.right--
+		hideServeIcon()
 		saveScoreData(scoreData)
 	}
 	/**
@@ -343,6 +373,30 @@
 		scoreData.left = scoreData.right
 		scoreData.right = temp
 		saveScoreData(scoreData)
+	}
+
+	/**
+	 * 左边发球
+	 */
+	function leftServe() {
+		LEFT_SERVE_ICON.style.display = 'block'
+		RIGHT_SERVE_ICON.style.display = 'none'
+	}
+
+	/**
+	 * 右边发球
+	 */
+	function rightServe() {
+		RIGHT_SERVE_ICON.style.display = 'block'
+		LEFT_SERVE_ICON.style.display = 'none'
+	}
+
+	/**
+	 * 不显示发球
+	 */
+	function hideServeIcon() {
+		RIGHT_SERVE_ICON.style.display = 'none'
+		LEFT_SERVE_ICON.style.display = 'none'
 	}
 
 	/**
@@ -377,6 +431,8 @@
 		}
 		if (beta >= 2) {
 			if (higher >= 21) {
+				// 比赛结束 不显示发球
+				hideServeIcon()
 				return '比赛结束！'
 			} else if (higher === 20) {
 				return '赛点'
